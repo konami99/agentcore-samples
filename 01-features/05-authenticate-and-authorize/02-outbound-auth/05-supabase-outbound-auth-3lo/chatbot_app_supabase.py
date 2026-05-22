@@ -355,9 +355,7 @@ def main():
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "agentSessionId" not in st.session_state:
-        st.session_state["agentSessionId"] = (
-            agentSessionId if agentSessionId else str(uuid.uuid4())
-        )
+        st.session_state["agentSessionId"] = str(uuid.uuid4())
     if "pending_assistant" not in st.session_state:
         st.session_state["pending_assistant"] = False
 
@@ -431,6 +429,7 @@ def main():
 
                 formatted_response = ""
                 chunk_count = 0
+                detected_auth_url = None
 
                 for chunk in streaming_client.invoke_endpoint_streaming(
                     agent_arn=agentRuntimeArn,
@@ -483,11 +482,27 @@ def main():
                                 formatted_response = accumulated_response
                             break
                         else:
-                            clickable = make_urls_clickable(accumulated_response)
-                            message_placeholder.markdown(
-                                f'<div class="assistant-bubble">🤖 {clickable}</div>',
-                                unsafe_allow_html=True,
-                            )
+                            if not detected_auth_url:
+                                auth_match = re.search(
+                                    r'Authorization url:\s*(https?://[^\s"]+)',
+                                    accumulated_response,
+                                )
+                                if auth_match:
+                                    detected_auth_url = auth_match.group(1)
+                                    message_placeholder.markdown(
+                                        f'<div class="assistant-bubble">🤖 Google Calendar authorization required. '
+                                        f'<a href="{detected_auth_url}" target="_blank" style="display:inline-block;'
+                                        f'margin-left:8px;padding:6px 14px;background:linear-gradient(135deg,#3ecf8e,#1db974);'
+                                        f'color:white;border-radius:8px;text-decoration:none;font-weight:600;">'
+                                        f'🔑 Authorize with Google</a></div>',
+                                        unsafe_allow_html=True,
+                                    )
+                                else:
+                                    clickable = make_urls_clickable(accumulated_response)
+                                    message_placeholder.markdown(
+                                        f'<div class="assistant-bubble">🤖 {clickable}</div>',
+                                        unsafe_allow_html=True,
+                                    )
                             time.sleep(0.02)
 
                 elapsed = time.time() - start_time
