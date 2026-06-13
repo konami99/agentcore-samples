@@ -18,7 +18,7 @@ Prerequisites:
   - AWS credentials configured (aws configure or environment variables)
   - Docker running (required for container build)
   - .env (this directory) populated with SUPABASE_URL, SUPABASE_ANON_KEY,
-    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SUPABASE_CLIENT_ID, CALLBACK_URL
+    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, CALLBACK_URL
   - pip install -r requirements.txt
 """
 
@@ -87,12 +87,6 @@ SUPABASE_ANON_KEY    = require_env("SUPABASE_ANON_KEY", AGENT_ENV)
 GOOGLE_CLIENT_ID     = require_env("GOOGLE_CLIENT_ID", AGENT_ENV)
 GOOGLE_CLIENT_SECRET = require_env("GOOGLE_CLIENT_SECRET", AGENT_ENV)
 
-SUPABASE_CLIENT_ID = os.environ.get("SUPABASE_CLIENT_ID", "").strip()
-if SUPABASE_CLIENT_ID:
-    print(f"  Supabase OAuth client ID: {SUPABASE_CLIENT_ID}")
-else:
-    print("  WARNING: SUPABASE_CLIENT_ID not set — only 'authenticated' audience will be allowed")
-
 NODE_CALLBACK_URL = require_env("CALLBACK_URL", AGENT_ENV)
 
 # ── AWS session ───────────────────────────────────────────────────────────────
@@ -157,12 +151,7 @@ os.chdir(AGENT_SOURCE_DIR)
 
 supabase_discovery_url = SUPABASE_URL.rstrip("/") + "/auth/v1/.well-known/openid-configuration"
 
-# allowedClients covers both Supabase auth flows:
-#   "authenticated" — aud claim on email/password JWTs (signInWithPassword)
-#   SUPABASE_CLIENT_ID — client_id claim on OAuth-server-flow JWTs
-allowed_clients = ["authenticated"]
-if SUPABASE_CLIENT_ID:
-    allowed_clients.append(SUPABASE_CLIENT_ID)
+allowed_audience = ["authenticated"]
 
 runtime = Runtime()
 runtime.configure(
@@ -176,7 +165,7 @@ runtime.configure(
     authorizer_configuration={
         "customJWTAuthorizer": {
             "discoveryUrl": supabase_discovery_url,
-            "allowedClients": allowed_clients,
+            "allowedAudience": allowed_audience,
         }
     },
 )

@@ -62,7 +62,7 @@ async def get_calendar():
         auth_flow="USER_FEDERATION",
         on_auth_url=on_auth_url,
         force_authentication=True,
-        callback_url=os.environ.get("CALLBACK_URL", "http://localhost:4000/oauth2/callback"),
+        callback_url=os.environ.get("CALLBACK_URL", "http://localhost:9090/oauth2/callback"),
     )
     async def get_calendar_events_today(access_token: Optional[str] = "") -> str:
         google_access_token = access_token
@@ -154,7 +154,7 @@ async def agent_invocation(payload):
 
     # Create and start the agent task
     task = asyncio.create_task(agent_task(user_message))
-    app.logger.info(os.environ.get("CALLBACK_URL", "http://localhost:4000/oauth2/callback"))
+    app.logger.info(os.environ.get("CALLBACK_URL", "http://localhost:9090/oauth2/callback"))
 
     # Return the stream, but ensure the task runs concurrently
     async def stream_with_task():

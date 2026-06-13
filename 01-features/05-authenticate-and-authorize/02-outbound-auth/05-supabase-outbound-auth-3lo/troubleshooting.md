@@ -14,3 +14,11 @@ streamlit run chatbot_app_supabase.py --server.address=0.0.0.0 --server.port=850
 ```
 
 Then forward the port in VS Code (**Ports** tab → **Forward a Port** → `8501`) and open `http://localhost:8501` in your Windows browser.
+
+If VS Code port forwarding shows as connected but the browser still shows "This page isn't working", use the WSL2 IP directly instead:
+
+```bash
+ip addr show eth0 | grep 'inet ' | awk '{print $2}' | cut -d/ -f1
+```
+
+Then open `http://<wsl2-ip>:8501` in your Windows browser.

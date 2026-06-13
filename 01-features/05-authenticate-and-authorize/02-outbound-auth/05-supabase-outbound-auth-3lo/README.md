@@ -118,11 +118,6 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 SUPABASE_URL="https://<ref>.supabase.co"
 SUPABASE_ANON_KEY="your-supabase-anon-key"
 
-# Optional — only needed if you use Supabase OAuth server-flow (social login).
-# Found in: Authentication → URL Configuration → client_id claim.
-# Leave blank if you only use email/password (signInWithPassword).
-SUPABASE_CLIENT_ID=""
-
 # The URL your browser can reach for the local OAuth2 callback server.
 # Local default: http://localhost:9090/oauth2/callback
 # SageMaker Studio: the proxy URL is detected automatically.
@@ -225,8 +220,11 @@ Loading configuration...
 - **Supabase customJWTAuthorizer**: AgentCore fetches the public JWKS from
   `<SUPABASE_URL>/auth/v1/.well-known/openid-configuration` to validate incoming JWTs. The JWT
   algorithm **must** be RS256 or ES256 — HS256 (Supabase default) will be rejected.
-- **allowedClients**: Set to `["authenticated"]` for email/password sign-in tokens, plus the
-  `SUPABASE_CLIENT_ID` if you also support social login via Supabase OAuth server flow.
+- **allowedClients**: `deploy.py` sets `allowedClients: ["authenticated"]`. AgentCore matches
+  this against the JWT `aud` claim when no `client_id` claim is present. Supabase
+  email/password JWTs (`signInWithPassword`) always carry `aud: "authenticated"` and no
+  `client_id`, so this works correctly. The more semantically precise field is
+  `allowedAudience: ["authenticated"]` — both are equivalent for this flow.
 - **GoogleOauth2 credential provider**: Pre-configured Google OAuth2 endpoints. You supply only
   your app's `clientId` and `clientSecret`.
 - **USER_FEDERATION (3LO)**: On first access the agent returns an authorization URL. The user
