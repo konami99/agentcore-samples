@@ -77,21 +77,18 @@ def setup_cognito() -> dict:
     cognito.admin_create_user(
         UserPoolId=user_pool_id,
         Username="testuser",
-        TemporaryPassword="MyPassword123!",
+        TemporaryPassword="MyPassword123!",  # pragma: allowlist secret
         UserAttributes=[{"Name": "email", "Value": "testuser@example.com"}],
         MessageAction="SUPPRESS",
     )
     cognito.admin_set_user_password(
         UserPoolId=user_pool_id,
         Username="testuser",
-        Password="MyPassword123!",
+        Password="MyPassword123!",  # pragma: allowlist secret
         Permanent=True,
     )
 
-    discovery_url = (
-        f"https://cognito-idp.{REGION}.amazonaws.com/{user_pool_id}"
-        "/.well-known/openid-configuration"
-    )
+    discovery_url = f"https://cognito-idp.{REGION}.amazonaws.com/{user_pool_id}/.well-known/openid-configuration"
     config = {
         "user_pool_id": user_pool_id,
         "client_id": client_id,
@@ -198,9 +195,7 @@ def main():
     # ── 4. Running the app ────────────────────────────────────────────────────
     print("\n=== Step 4: Running the Interactive App ===")
     print("  The github_agent.py file is the agent code deployed to AgentCore Runtime.")
-    print(
-        "  It lists private GitHub repositories using the GithubOauth2 credential provider."
-    )
+    print("  It lists private GitHub repositories using the GithubOauth2 credential provider.")
     print("")
     print("  For interactive testing, run the Streamlit app:")
     print(f"  python oauth2_callback_server.py --region {REGION} &")

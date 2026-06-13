@@ -18,7 +18,8 @@ Step-by-step notebooks covering setup through advanced multi-agent orchestration
 | 03 | [Wallet operations](00-getting-started/03-user-onboarding-wallet-funding/) | User onboarding, wallet funding, delegation, balance checks, multi-network instruments |
 | 04 | [Gateway + Coinbase Bazaar](00-getting-started/04-agent-with-coinbase-bazaar-via-gateway/) | Discover 10,000+ paid MCP tools via AgentCore Gateway and pay on call |
 | 05 | [Browser + payments](00-getting-started/05-agent-with-browser-tool-pay-for-content/) | Intercept 402 paywalls in a browser session and pay for web content |
-| 06 | [Multi-agent orchestrator](00-getting-started/06-multi-agent-payment-orchestrator/) | Multiple agents with separate wallets, per-agent budgets, and runtime deploy |
+| 06 | [Research agent with payment memory](00-getting-started/06-research-agent-with-payment-memory/) | Combine AgentCore payments with AgentCore Memory to recall past data and skip redundant paid calls across sessions |
+| 07 | [Multi-agent orchestrator](00-getting-started/07-multi-agent-payment-orchestrator/) | Multiple agents with separate wallets, per-agent budgets, and runtime deploy |
 
 ## Use Cases
 
@@ -27,6 +28,7 @@ Real-world use cases that demonstrate AgentCore payments end-to-end. See [02-use
 | Use case | What it demonstrates |
 |---|---|
 | [Pay for Content (Browser Use)](02-use-cases/pay-for-content-browser-use/) | A Strands agent uses AgentCore Browser Tool to navigate a paywalled website, reads the embedded x402 requirement from the page DOM, calls `ProcessPayment` to generate a USDC proof, and returns the unlocked content — all without human involvement in the payment step. Includes a deployable CDK content-provider stack. |
+| [Pay for Data (Heurist)](02-use-cases/pay-for-data/) | A finance research agent calls paid Heurist x402 endpoints for live prices and macro data, analyzes results with Code Interpreter, and exports charts and reports to S3 — settling USDC on Base mainnet via `AgentCorePaymentsPlugin`. Deployed to AgentCore Runtime with full AgentCore observability. **Mainnet — real USDC required; fund your wallet before running.** |
 
 ## Prerequisites
 

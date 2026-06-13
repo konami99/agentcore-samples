@@ -14,8 +14,8 @@ from boto3.session import Session
 
 POOL_NAME = "RuntimeAuthDemoPool"
 USERNAME = "testuser"
-PASSWORD = "AgentCoreTest1!"
-TEMP_PASSWORD = "TempPass123!"
+PASSWORD = "AgentCoreTest1!"  # pragma: allowlist secret
+TEMP_PASSWORD = "TempPass123!"  # pragma: allowlist secret
 
 
 def setup_cognito():
@@ -63,10 +63,7 @@ def setup_cognito():
     )
     _ = auth["AuthenticationResult"]["AccessToken"]
 
-    discovery_url = (
-        f"https://cognito-idp.{region}.amazonaws.com/{pool_id}"
-        "/.well-known/openid-configuration"
-    )
+    discovery_url = f"https://cognito-idp.{region}.amazonaws.com/{pool_id}/.well-known/openid-configuration"
 
     config = {
         "pool_id": pool_id,

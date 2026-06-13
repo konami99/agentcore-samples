@@ -100,7 +100,7 @@ All combinations use `EMBEDDED_CRYPTO_WALLET` with `linkedAccounts` for user ide
 - Wallet provider credentials:
   - **Coinbase CDP:** See [`providers/coinbase_cdp_account_setup.py`](providers/coinbase_cdp_account_setup.py)
   - **Stripe (Privy):** See [`providers/stripe_privy_account_setup.py`](providers/stripe_privy_account_setup.py)
-- `.env` configured: `cp .env.sample .env` and fill in values
+- `.env` configured: copy a provider sample to the parent directory and fill in values, e.g. `cp .env.coinbase.sample ../.env` (for Coinbase CDP) or `cp .env.privy.sample ../.env` (for Stripe/Privy). The `.env` file lives in the parent `00-getting-started/` directory and is shared by every tutorial.
 
 ## Running the Python Scripts
 
@@ -210,4 +210,5 @@ After completing Tutorial 00, continue to any of the downstream tutorials in any
 - **Tutorial 03** — `../03-user-onboarding-wallet-funding/` — Wallet lifecycle, funding, delegation
 - **Tutorial 04** — `../04-agent-with-coinbase-bazaar-via-gateway/` — Discover paid MCP tools via AgentCore gateway
 - **Tutorial 05** — `../05-agent-with-browser-tool-pay-for-content/` — Browser + paywall payment pattern
-- **Tutorial 06** — `../06-multi-agent-payment-orchestrator/` — Multi-agent orchestration with per-agent budgets
+- **Tutorial 06** — `../06-research-agent-with-payment-memory/` — Recall past data and skip redundant paid calls with AgentCore Memory
+- **Tutorial 07** — `../07-multi-agent-payment-orchestrator/` — Multi-agent orchestration with per-agent budgets

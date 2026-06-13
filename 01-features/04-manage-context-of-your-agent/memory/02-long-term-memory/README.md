@@ -1,14 +1,30 @@
-# AgentCore memory — Long-term memory
+# Long-term memory
 
-Long-term memory turns raw conversation events into structured, reusable records — facts, summaries, preferences, and episodes — organized in namespaces and retrieved by semantic search.
+Long-term memory turns raw conversation events into structured, reusable records — facts, summaries, preferences, and episodes — organised in namespaces and retrieved by semantic search.
 
-## Folder layout
+Run the canonical end-to-end flow first:
 
-| Folder | Purpose |
+```bash
+pip install boto3 bedrock-agentcore
+python standard-usage.py boto3   # default — direct service calls
+python standard-usage.py sdk     # AgentCore MemoryClient helpers
+```
+
+It creates a memory with a semantic strategy, sends a few `CreateEvent` calls, waits for extraction, and retrieves the resulting records. Every sub-feature script supports the same three surfaces.
+
+## Sub-features
+
+| Folder | What it covers |
 |---|---|
-| [`01-core-features/`](./01-core-features/) | Framework-agnostic primitives: strategies (semantic, summary, user preference, episodic), overrides, self-managed, namespaces, retrieval, metadata, batch APIs, redrive, record streaming |
-| [`02-single-agent/`](./02-single-agent/) | Framework integrations (Strands, LangGraph, LlamaIndex) across the three patterns |
-| [`03-multi-agent/`](./03-multi-agent/) | Multi-agent LTM with shared context |
+| [`01-built-in-strategies/`](./01-built-in-strategies/) | The four built-in extractors: semantic, summary, user preference, episodic |
+| [`02-strategy-overrides/`](./02-strategy-overrides/) | Customise built-in extraction and consolidation prompts |
+| [`03-self-managed-strategy/`](./03-self-managed-strategy/) | Plug your own extraction worker via SNS + S3 with message/token/time triggers |
+| [`04-namespaces/`](./04-namespaces/) | Template variables, exact vs. prefix matching, multi-tenancy |
+| [`05-retrieval/`](./05-retrieval/) | `RetrieveMemoryRecords`, `ListMemoryRecords`, `GetMemoryRecord` |
+| [`06-record-metadata/`](./06-record-metadata/) | `indexedKeys`, structured metadata, `metadataFilters` |
+| [`07-batch-apis/`](./07-batch-apis/) | Direct CRUD with `BatchCreate/Update/DeleteMemoryRecords` |
+| [`08-redrive/`](./08-redrive/) | List failed extraction jobs and restart them with `StartMemoryExtractionJob` |
+| [`09-record-streaming/`](./09-record-streaming/) | Push lifecycle events to Kinesis for event-driven pipelines |
 
 ## The four built-in strategies
 
@@ -19,41 +35,69 @@ Long-term memory turns raw conversation events into structured, reusable records
 | **User Preference** | Stable per-user settings | `/users/{actorId}/preferences/` |
 | **Episodic** | Meaningful interaction sequences | `/episodes/{actorId}/` |
 
-Plus **Built-in with overrides** (prompt-level tweaks on the above) and **Self-managed** (your own Lambdas for extraction + consolidation).
+Built-in strategies can be **overridden** to swap their extraction or consolidation prompts (`02-strategy-overrides/`), or replaced entirely with a **self-managed** worker (`03-self-managed-strategy/`).
 
-## Framework × pattern coverage
+## Framework integrations
 
-### Single-agent
+End-to-end agent examples live under `examples/`:
 
-| Framework | Built-in hook / callback / memory-block | Custom | memory-as-tool |
-|---|---|---|---|
-| Strands | `customer-support/customer-support-inbuilt-strategy`, `simple-math-assistant`, `meeting-notes-assistant-using-episodic` | `customer-support/customer-support-override-strategy`, `culinary-assistant-self-managed-strategy`, `culinary-assistant-self-managed-strategy-with-citations` | `culinary-assistant`, `debugging-agent` |
-| LangGraph | _gap_ | `custom-user-preferences`, `episodic-memory` (nutrition) | _gap_ |
-| LlamaIndex | _gap_ | _gap_ | academic research, investment advisor, legal analyzer, medical knowledge |
+- [`examples/single-agent/`](./examples/single-agent/) — Strands, LangGraph, LlamaIndex with hooks, callbacks, memory-block and memory-as-tool patterns.
+- [`examples/multi-agent/`](./examples/multi-agent/) — Multi-agent flows with shared LTM (travel booking, healthcare).
 
-### Multi-agent (Strands)
+## Best practices
 
-- Built-in hook: `travel-booking-agent`
-- Custom hook: `healthcare-assistant-using-episodic`
+- **Pick a namespace template before you write.** `{actorId}` and `{sessionId}` are the two stable hooks; everything else flows from them.
+- **Wait for extraction.** Long-term records appear ~30–60 seconds after `CreateEvent`. Don't retrieve immediately.
+- **Pin retrieval to a namespace.** Cross-namespace search is rarely what you want and pulls noise.
+- **Use `metadataFilters` for hard constraints** (region, tier, language) — they're enforced at the index, not in the prompt.
+- **Subscribe to streaming for downstream pipelines.** Polling for changes is the wrong default at any non-trivial scale.
+- **Redrive failed jobs deliberately.** Read `failureReason` first; blind retries cost tokens and rarely help.
 
+## Where to next
 
-## Next steps
+- Observability for memory operations: [`../04-observability/`](../04-observability/)
+- IAM, encryption, multi-tenant isolation: [`../05-security/`](../05-security/)
+- Streaming use cases (cross-region, recommendations, analytics): [`./09-record-streaming/examples/`](./09-record-streaming/examples/)
 
-- Ground the concepts: [`01-core-features/`](./01-core-features/)
-- Agent integrations: [`02-single-agent/`](./02-single-agent/), [`03-multi-agent/`](./03-multi-agent/)
-- Streaming use cases built on the streaming primitive: [`../03-advanced-patterns/05-streaming-use-cases/`](../03-advanced-patterns/05-streaming-use-cases/)
-- Security & isolation: [`../04-security-patterns/`](../04-security-patterns/)
+## AWS CLI walkthrough
 
-## Running the Python Scripts
-
-Navigate into each sub-folder and run the scripts:
-
-```bash
-pip install -r requirements.txt  # if present
-```
+The same flow expressed with the AWS CLI:
 
 ```bash
-# 01-core-features/
-python 01-core-features/09-record-streaming.py
-```
+# 1. Create memory with a semantic strategy. Namespaces use {actorId}/{sessionId} templates.
+aws bedrock-agentcore-control create-memory \
+  --region "$AWS_REGION" --name "LtmStandardCli-$(date +%s)" \
+  --event-expiry-duration 30 --client-token "$(uuidgen)" \
+  --memory-strategies '[{
+    "semanticMemoryStrategy": {
+      "name": "UserFacts",
+      "namespaces": ["/users/{actorId}/facts/"]
+    }
+  }]'
+export MEMORY_ID=<id>
 
+# 2. Drive a few conversation turns; extraction happens asynchronously.
+for line in \
+  '{"role":"USER","text":"I prefer Python and I'\''m based in Berlin."}' \
+  '{"role":"ASSISTANT","text":"Got it."}' \
+  '{"role":"USER","text":"I'\''m allergic to peanuts."}'; do
+  role=$(echo "$line" | jq -r .role)
+  text=$(echo "$line" | jq -r .text)
+  aws bedrock-agentcore create-event \
+    --region "$AWS_REGION" --memory-id "$MEMORY_ID" \
+    --actor-id user-42 --session-id sess-cli \
+    --event-timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    --payload "[{\"conversational\":{\"role\":\"$role\",\"content\":{\"text\":\"$text\"}}}]"
+done
+
+# 3. Wait ~60s, then retrieve records.
+sleep 60
+aws bedrock-agentcore retrieve-memory-records \
+  --region "$AWS_REGION" --memory-id "$MEMORY_ID" \
+  --namespace "/users/user-42/facts/" \
+  --search-criteria '{"searchQuery":"preferences and constraints?","topK":5}'
+
+# 4. Teardown
+aws bedrock-agentcore-control delete-memory \
+  --region "$AWS_REGION" --memory-id "$MEMORY_ID" --client-token "$(uuidgen)"
+```

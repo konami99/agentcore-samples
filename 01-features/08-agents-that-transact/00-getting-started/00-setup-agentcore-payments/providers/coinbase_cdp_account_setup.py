@@ -27,13 +27,12 @@ import sys
 
 from dotenv import load_dotenv
 
-sys.path.append(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from utils import update_env_file
 
 ENV_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    ".env",
 )
 load_dotenv(ENV_FILE, override=True)
 
@@ -104,10 +103,8 @@ for name, val in [
         missing.append(name)
 
 if missing:
-    print(
-        f"\n❌ Missing values: {missing}"
-    )  # codeql[py/clear-text-logging-sensitive-data]
-    print("   Paste your values and re-run.")
+    print(f"\n❌ {len(missing)} of 3 required value(s) are missing or still set to a placeholder.")
+    print("   Re-run the script and paste real values when prompted.")
     sys.exit(1)
 
 result = update_env_file(
@@ -127,9 +124,7 @@ print("\n  Never commit .env to git.")
 print("\n── Step 5 (Optional): Verify Credentials ──")
 print("To verify CDP connectivity, install the Coinbase CDP SDK and run:")
 print("  pip install cdp-sdk")
-print(
-    "  python -c \"from cdp import Cdp; Cdp.configure('<KEY_ID>', '<KEY_SECRET>'); print('CDP configured')\""
-)
+print("  python -c \"from cdp import Cdp; Cdp.configure('<KEY_ID>', '<KEY_SECRET>'); print('CDP configured')\"")
 print()
 print("This step is optional — AgentCore payments validates credentials during")
 print("CreatePaymentCredentialProvider (Tutorial 00 Step 4).")
