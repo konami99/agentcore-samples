@@ -22,6 +22,7 @@
 - Grace Lang
 - Hari Tripathi
 - Joshua Samuel
+- Naga Gaddamu(nagagaddamu)
 - khastation
 - manchandakp
 - madhurprash
@@ -119,3 +120,4 @@
 - Gui Ruggiero (guiruggiero)
 - Visakh Madathil (vmmadathil)
 - JobRamos (jobdram)
+- Will Matos (wilmatos)

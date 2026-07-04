@@ -1,10 +1,12 @@
 import json
-import boto3
+import os
 from datetime import datetime, timezone
 
+import boto3
+
 dynamodb = boto3.resource("dynamodb")
-claims_table = dynamodb.Table("ClaimsAgent-Claims")
-reviews_table = dynamodb.Table("ClaimsAgent-Reviews")
+claims_table = dynamodb.Table(os.environ.get("CLAIMS_TABLE", "ClaimsAgent-Claims"))
+reviews_table = dynamodb.Table(os.environ.get("REVIEWS_TABLE", "ClaimsAgent-Reviews"))
 
 
 def handler(event, context):
