@@ -165,7 +165,7 @@ Open two terminals:
 python oauth2_callback_server.py --region us-west-2
 
 # Terminal 2 — Streamlit UI
-streamlit run chatbot_app_supabase.py
+streamlit run chatbot_app_supabase.py --server.headless true --server.enableCORS false --server.enableXsrfProtection false
 ```
 
 Open `http://localhost:8501` in your browser.
@@ -255,6 +255,19 @@ be verified by AgentCore's public-key-based authorizer.
 
 Supabase access tokens expire after ~1 hour. Sign out and sign back in in the Streamlit app to
 obtain a fresh token.
+
+### Streamlit page spins (WSL2)
+
+WSL2 assigns a new IP on every restart, which breaks saved port forwarding rules. Additionally,
+Streamlit's default CORS and XSRF settings block WebSocket connections across the WSL2 network
+boundary. The `--server.headless true --server.enableCORS false --server.enableXsrfProtection false`
+flags in the run command above fix this. If it still spins, update your Windows port forwarding rule
+to the current WSL IP (`hostname -I`) via PowerShell (as Administrator):
+
+```powershell
+netsh interface portproxy delete v4tov4 listenport=8501 listenaddress=0.0.0.0
+netsh interface portproxy add v4tov4 listenport=8501 listenaddress=0.0.0.0 connectport=8501 connectaddress=<wsl-ip>
+```
 
 ### Port 9090 already in use
 
